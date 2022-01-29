@@ -1,0 +1,5 @@
+{"ssid":"your wifi SSID",
+"wifi_pass":"wifi password",
+"mqtt_server":"mqtt.iotlab.dev",
+"mqtt_user":"mqtt username",
+"mqtt_pass":"mqtt password"}
