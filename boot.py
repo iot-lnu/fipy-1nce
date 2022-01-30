@@ -1,3 +1,5 @@
+from network_connector import NetworkConnector
+#from lib import logging
 import urequests as requests
 from network import LTE
 from network import WLAN
@@ -5,33 +7,17 @@ from simple import MQTTClient
 import time
 import machine
 import pycom
-from machine import Pin
 import json
 import ubinascii
 
 print('Hi, up and running with 1NCE')
 pycom.heartbeat(False)
 pycom.rgbled(0x7f7f00) # yellow
-lte = LTE()
 
-def connect_lte(lte):
-    #global lte
-    try:
-        lte.init()
-        apn = 'iot.1nce.net'
-        lte.attach(apn=apn)
-        print('connecting...')
-        time.sleep(1)
-        lte.connect()
-        pycom.rgbled(0x007f00) # green
-    except:
-        print('LTE failed')
+#logging.basic_config(level=logging.INFO)
 
-
-while not lte.isconnected():
-    print("Connecting to LTE ... ")
-    connect_lte(lte)
-    time.sleep(5)
+connector = NetworkConnector()
+connector.connect()
 
 
 def sync_time():

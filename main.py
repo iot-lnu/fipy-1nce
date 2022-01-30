@@ -1,8 +1,7 @@
 
+from machine import Pin
 relay = Pin('P23', mode=Pin.OUT, pull=Pin.PULL_DOWN)
 relay.value(0)
-
-
 
 def connect_wifi(wifi_ssid, wifi_pass):
     global wlan
@@ -57,7 +56,7 @@ def connection_status():
 
 def sub_cb(topic, msg):
     print(msg)
-    blink_led(3)
+    blink_led(1, 'blue')
     if msg == b'{"control":"OPEN"}':
         relay.value(1)
         client.publish(topic="relay/status", msg=b'{"status":"open"}')
@@ -67,23 +66,32 @@ def sub_cb(topic, msg):
 
 def connect_mqtt():
     global client
-    client = MQTTClient('fipy_device_relay', config['mqtt_server'], user=config['mqtt_user'], password=config['mqtt_pass'], keepalive=120, ssl=False, port=1883)
-    client.set_callback(sub_cb)
-    client.set_last_will("relay/status/device", msg="OFFLINE", retain=True, qos=0)
-    client.connect()
-    client.subscribe(topic="relay/control")
-    client.publish(topic="relay/status/device", msg="ONLINE " + connection_status())
+    try:
+        client = MQTTClient('fipy_device_relay', config['mqtt_server'], user=config['mqtt_user'], password=config['mqtt_pass'], keepalive=120, ssl=False, port=1883)
+        client.set_callback(sub_cb)
+        client.set_last_will("relay/status/device", msg="OFFLINE", retain=True, qos=0)
+        client.connect()
+        client.subscribe(topic="relay/control")
+        client.publish(topic="relay/status/device", msg="ONLINE " + connection_status())
+    except:
+        connector.connect()
 
 # Send wake up request.
-r = requests.get("https://dev0.iotema.io:1880/demo-fipy?state=wake_up " + str(time.localtime() ) )
-r.close()
+try:
+    r = requests.get("https://dev0.iotema.io:1880/demo-fipy?state=wake_up " + str(time.localtime() ) )
+    r.close()
+except:
+    print('request failed')
 
-def blink_led(blinks):
+def blink_led(blinks, color):
+    if color == 'blue': color = 0x6080BF
+    if color == 'red': color = 0xe60b21
+    if color == 'yellow': color = 0xf3f705
     for i in range(blinks):
-        pycom.rgbled(0x6080BF) # blue
-        time.sleep(0.05)
+        pycom.rgbled(color)
+        time.sleep(0.02)
         pycom.rgbled(0x000000) # nul
-        time.sleep(0.05)
+        time.sleep(0.02)
 
 while True:
     #r = requests.get("https://dev0.iotema.io:1880/demo-fipy?state=hearbeat "+ str(time.localtime() ) )
@@ -98,6 +106,7 @@ while True:
             #client.ping()
         time.sleep(0.1)
     except:
+        blink_led(5,'red')
         print('reconnecting ..')
         connect_mqtt()
         time.sleep(1)
